@@ -1,77 +1,131 @@
-# Real-Time Chat Application with Socket.io
+# Socket.io Chat – Week 5 MERN Assignment
 
-This assignment focuses on building a real-time chat application using Socket.io, implementing bidirectional communication between clients and server.
+Fully featured real-time chat platform built with the MERN stack and Socket.io. It delivers authentication, global and private rooms, read receipts, in-app/desktop notifications, typing indicators, reconnection flows, message persistence, pagination, and performance-focused UX.
 
-## Assignment Overview
+## Tech Stack
 
-You will build a chat application with the following features:
-1. Real-time messaging using Socket.io
-2. User authentication and presence
-3. Multiple chat rooms or private messaging
-4. Real-time notifications
-5. Advanced features like typing indicators and read receipts
+- **Server:** Node.js, Express, Socket.io, MongoDB/Mongoose, JWT
+- **Client:** React (Vite), Context API, socket.io-client, React Router, React Hot Toast
 
 ## Project Structure
 
 ```
 socketio-chat/
-├── client/                 # React front-end
-│   ├── public/             # Static files
-│   ├── src/                # React source code
-│   │   ├── components/     # UI components
-│   │   ├── context/        # React context providers
-│   │   ├── hooks/          # Custom React hooks
-│   │   ├── pages/          # Page components
-│   │   ├── socket/         # Socket.io client setup
-│   │   └── App.jsx         # Main application component
-│   └── package.json        # Client dependencies
-├── server/                 # Node.js back-end
-│   ├── config/             # Configuration files
-│   ├── controllers/        # Socket event handlers
-│   ├── models/             # Data models
-│   ├── socket/             # Socket.io server setup
-│   ├── utils/              # Utility functions
-│   ├── server.js           # Main server file
-│   └── package.json        # Server dependencies
-└── README.md               # Project documentation
+├── client/     # Vite + React UI
+└── server/     # Express + Socket.io API
 ```
 
-## Getting Started
+## Features
 
-1. Accept the GitHub Classroom assignment invitation
-2. Clone your personal repository that was created by GitHub Classroom
-3. Follow the setup instructions in the `Week5-Assignment.md` file
-4. Complete the tasks outlined in the assignment
+**Core**
+- Username-based authentication with JWT session storage
+- Global “Lobby” room available to every user
+- MongoDB message storage (`from`, `fromName`, `roomId`, `toUserId`, `text`, `ts`, `readBy`)
+- Online/offline presence broadcasts and roster UI
+- Typing indicators with debounce + auto-clear
+- Acknowledged socket events for message delivery state
 
-## Files Included
+**Advanced**
+- Private 1:1 rooms with automatic creation/join + history
+- Unlimited public rooms (create/join/leave) with history + participants
+- Read receipts (per message + live socket updates)
+- Real-time notification bell, sounds, toast alerts, desktop notifications, unread counters
+- Message pagination (`GET /rooms/:id/messages?before=<ts>&limit=20`)
+- Resilient reconnection logic with automatic room rejoin + presence restore
+- Failed message retry queue + connection status indicator
 
-- `Week5-Assignment.md`: Detailed assignment instructions
-- Starter code for both client and server:
-  - Basic project structure
-  - Socket.io configuration templates
-  - Sample components for the chat interface
+## Environment Variables
 
-## Requirements
+Create the following files before running the project.
 
-- Node.js (v18 or higher)
-- npm or yarn
-- Modern web browser
-- Basic understanding of React and Express
+`server/.env`
+```
+MONGO_URI=mongodb://127.0.0.1:27017/socketio-chat
+PORT=5000
+CLIENT_ORIGIN=http://localhost:5173
+JWT_SECRET=supersecret
+```
 
-## Submission
+`client/.env`
+```
+VITE_SERVER_URL=http://localhost:5000
+```
 
-Your work will be automatically submitted when you push to your GitHub Classroom repository. Make sure to:
+## Installation
 
-1. Complete both the client and server portions of the application
-2. Implement the core chat functionality
-3. Add at least 3 advanced features
-4. Document your setup process and features in the README.md
-5. Include screenshots or GIFs of your working application
-6. Optional: Deploy your application and add the URLs to your README.md
+### 1. Server
+```bash
+cd server
+npm install
+npm run dev   # runs nodemon server.js on port 5000
+```
 
-## Resources
+Ensure MongoDB is running locally (or update `MONGO_URI` to your Atlas/remote instance).
 
-- [Socket.io Documentation](https://socket.io/docs/v4/)
-- [React Documentation](https://react.dev/)
-- [Express.js Documentation](https://expressjs.com/)
-- [Building a Chat Application with Socket.io](https://socket.io/get-started/chat) 
+### 2. Client
+```bash
+cd client
+npm install
+npm run dev   # launches Vite dev server on http://localhost:5173
+```
+
+Open the Vite URL shown in the console (default `http://localhost:5173`) once both client and server dev servers are running.
+
+## Manual Test Plan
+
+1. **Login Flow**
+   - Open two browsers (or an incognito window) and sign in with different usernames.
+2. **Global Room**
+   - Verify both users land in the global room (`/rooms/<globalId>`), exchange messages, and confirm instant delivery.
+3. **Room Management**
+   - Create a new room from the sidebar, confirm it broadcasts “user joined” notification, and check history pagination with “Load previous messages”.
+4. **Private Messaging**
+   - From the people list, start a DM. Confirm private history loads, messages remain in MongoDB, and read receipts display for sent items.
+5. **Typing + Presence**
+   - Start typing in one browser and watch the typing indicator plus presence chips change in the other session.
+6. **Notifications**
+   - Mute the active room (navigate to a different one) and send a message; bell count, toast, sound, and desktop notification should appear.
+7. **Read Receipts**
+   - Observe “Read by …” labels update when the other user views messages.
+8. **Reconnection**
+   - Stop and restart the server or disable/re-enable the network tab; the client auto-reconnects, rejoins rooms, and restores presence without losing state.
+
+## Screenshots / GIF Placeholders
+
+Add your captures to `docs/screenshots/` (not committed yet) and update the filenames if desired.
+
+![Login Screen](docs/screenshots/login.png)
+![Chat Room](docs/screenshots/chat-room.png)
+![Notifications](docs/screenshots/notifications.gif)
+
+## Deployment
+
+1. **Server**
+   - Configure production `.env` with hosted MongoDB and deployed client origin.
+   - Build a production bundle (optional) and run `npm start` (which executes `node server.js`).
+   - Consider process managers like PM2 and enable HTTPS for secure sockets.
+2. **Client**
+   - `cd client && npm run build` to generate static assets inside `client/dist`.
+   - Serve the contents of `dist/` via any static host (Netlify, Vercel, S3, etc.).
+   - Update `CLIENT_ORIGIN` and `VITE_SERVER_URL` to point to the deployed domains before building.
+
+## Troubleshooting
+
+| Issue | Fix |
+| --- | --- |
+| `MongoNetworkError` on server start | Confirm MongoDB is running and `MONGO_URI` is correct. |
+| Socket connection refused | Make sure both server (port 5000) and client (port 5173) are running, and that `CLIENT_ORIGIN`/`VITE_SERVER_URL` match. |
+| Desktop notifications not showing | Browser may block notifications—allow them when prompted or reset the permission under site settings. |
+| Notification sound missing | Some browsers require a user gesture before playing audio; send one message post-login to unlock audio playback. |
+| Messages stuck in “Failed” state | Use the retry buttons rendered above the composer. Ensure the socket is connected (connection badge shows “Connected”). |
+
+## Additional Notes
+
+- REST APIs live under `/api/*` and require the `Authorization: Bearer <token>` header.
+- Socket namespaces rely on default namespace with rooms; no extra configuration is required.
+- Styling uses custom CSS (no Tailwind) to remain lightweight and self-contained.
+
+Happy chatting! 🎉
+
+
+
